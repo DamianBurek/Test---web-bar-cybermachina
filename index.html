@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cybermachina Pub — Bar dla Graczy | Rzeszów</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================
+     ZMIENNE — WKLEJ WEBHOOKI N8N TUTAJ W JS
+     ============================================ */
+
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111318;
+    --bg3: #0d0f14;
+    --accent: #39ff14;
+    --accent-red: #ff3c3c;
+    --text: #e8e8e8;
+    --text-muted: #888899;
+    --border: #1e2028;
+    --font-pixel: 'Press Start 2P', monospace;
+    --font-title: 'Rajdhani', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+  /* ============================================
+     NAVBAR
+     ============================================ */
+  #navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 0 2.5rem;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.3s, backdrop-filter 0.3s, border-bottom 0.3s;
+  }
+
+  #navbar.scrolled {
+    background: rgba(10,10,10,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+  }
+
+  .nav-logo svg { width: 38px; height: 38px; flex-shrink: 0; }
+
+  .nav-brand {
+    font-family: var(--font-pixel);
+    font-size: 0.65rem;
+    color: #fff;
+    letter-spacing: 0.05em;
+    line-height: 1.4;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--font-title);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    position: relative;
+    transition: color 0.2s;
+    padding-bottom: 4px;
+  }
+
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0; height: 1px;
+    background: var(--accent);
+    transition: width 0.25s;
+  }
+
+  .nav-links a:hover,
+  .nav-links a.active {
+    color: var(--accent);
+    text-shadow: 0 0 12px rgba(57,255,20,0.4);
+  }
+
+  .nav-links a:hover::after,
+  .nav-links a.active::after { width: 100%; }
+
+  /* Hamburger */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 4px;
+    background: none;
+    border: none;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 24px; height: 2px;
+    background: var(--text);
+    transition: all 0.3s;
+  }
+
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* Mobile menu */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 70px; right: 0;
+    width: 260px;
+    background: rgba(10,10,10,0.97);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem;
+    flex-direction: column;
+    gap: 1.8rem;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    z-index: 999;
+  }
+
+  .mobile-menu.open { transform: translateX(0); display: flex; }
+
+  .mobile-menu a {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .mobile-menu a:hover { color: var(--accent); }
+
+  /* ============================================
+     HERO
+     ============================================ */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(57,255,20,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,255,20,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    z-index: 0;
+  }
+
+  .hero-glow {
+    position: absolute;
+    bottom: -120px; left: -120px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(57,255,20,0.07) 0%, transparent 65%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .hero-glow-red {
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(255,60,60,0.06) 0%, transparent 65%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    padding: 0 2.5rem;
+    max-width: 900px;
+    margin-left: 8vw;
+  }
+
+  .hero-location {
+    font-family: var(--font-pixel);
+    font-size: 0.5rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: var(--font-pixel);
+    font-size: clamp(2.2rem, 7vw, 5.5rem);
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    min-height: 2.4em;
+  }
+
+  .hero-title .cursor {
+    display: inline-block;
+    width: 0.08em;
+    height: 0.9em;
+    background: var(--accent);
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: blink 0.8s infinite;
+  }
+
+  @keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+  .hero-sub {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.6s 1.8s forwards;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.6s 2.1s forwards;
+  }
+
+  .btn-primary {
+    font-family: var(--font-title);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 24px rgba(57,255,20,0.5);
+    transform: translateY(-2px);
+  }
+
+  .btn-outline {
+    font-family: var(--font-title);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 1rem 2rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+
+  .btn-outline:hover {
+    background: rgba(57,255,20,0.08);
+    box-shadow: 0 0 20px rgba(57,255,20,0.25);
+    transform: translateY(-2px);
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 2.5rem; right: 2.5rem;
+    writing-mode: vertical-rl;
+    font-family: var(--font-pixel);
+    font-size: 0.38rem;
+    color: var(--text-muted);
+    letter-spacing: 0.2em;
+    opacity: 0;
+    animation: fadeIn 0.6s 2.5s forwards, pulse 2s 3s infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity:0; }
+    to { opacity:0.6; }
+  }
+
+  /* ============================================
+     SECTION COMMON
+     ============================================ */
+  section { padding: 7rem 2.5rem; }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .section-title {
+    font-family: var(--font-pixel);
+    font-size: clamp(0.75rem, 2vw, 1rem);
+    color: #fff;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.2rem;
+    display: inline-block;
+  }
+
+  .section-line {
+    width: 60px; height: 2px;
+    background: var(--accent);
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(57,255,20,0.5);
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ============================================
+     MENU SECTION
+     ============================================ */
+  #menu { background: var(--bg3); }
+
+  .menu-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    font-family: var(--font-title);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 0.7rem 1.6rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover { color: var(--text); border-color: var(--text-muted); }
+
+  .tab-btn.active {
+    color: #000;
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(57,255,20,0.3);
+  }
+
+  .tab-content { display: none; animation: fadeTab 0.35s ease; }
+  .tab-content.active { display: grid; }
+
+  @keyframes fadeTab { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .menu-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 1.4rem 1.6rem;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .menu-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(57,255,20,0.3);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .menu-card-name {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+
+  .menu-card-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 0.9rem;
+  }
+
+  .menu-card-price {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ============================================
+     O NAS
+     ============================================ */
+  #about { background: var(--bg); }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: center;
+  }
+
+  .about-subtitle {
+    font-family: var(--font-title);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1.4rem;
+    line-height: 1.3;
+  }
+
+  .about-text {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.85;
+    margin-bottom: 1rem;
+  }
+
+  .about-stats {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-number {
+    font-family: var(--font-pixel);
+    font-size: 1rem;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-family: var(--font-title);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .about-quote-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 3rem 2rem;
+    position: relative;
+  }
+
+  .about-quote-card::before {
+    content: '"';
+    font-family: var(--font-pixel);
+    font-size: 4rem;
+    color: var(--accent);
+    opacity: 0.15;
+    position: absolute;
+    top: 1rem; left: 1.5rem;
+    line-height: 1;
+  }
+
+  .about-quote {
+    font-family: var(--font-pixel);
+    font-size: 0.6rem;
+    color: var(--accent);
+    line-height: 2;
+    text-align: center;
+  }
+
+  /* ============================================
+     WYDARZENIA
+     ============================================ */
+  #events { background: var(--bg3); }
+
+  .events-subtitle {
+    font-family: var(--font-title);
+    font-size: 1rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 3.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .event-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+
+  .event-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  }
+
+  .event-img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #0d0f14 0%, #1a1f2e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .event-img::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(rgba(57,255,20,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,255,20,0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .event-img svg {
+    width: 52px; height: 52px;
+    opacity: 0.25;
+    position: relative;
+    z-index: 1;
+  }
+
+  .event-body { padding: 1.5rem; }
+
+  .event-date {
+    font-family: var(--font-pixel);
+    font-size: 0.45rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.8rem;
+  }
+
+  .event-name {
+    font-family: var(--font-title);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.7rem;
+    line-height: 1.2;
+  }
+
+  .event-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 1.3rem;
+  }
+
+  .event-btns {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-sm-outline {
+    font-family: var(--font-title);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-sm-outline:hover { color: var(--accent); border-color: var(--accent); }
+
+  .btn-sm-green {
+    font-family: var(--font-title);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+
+  .btn-sm-green:hover { box-shadow: 0 0 18px rgba(57,255,20,0.55); }
+
+  /* ============================================
+     KONTAKT
+     ============================================ */
+  #contact { background: var(--bg); }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .contact-info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+
+  .contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .contact-icon {
+    width: 40px; height: 40px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .contact-icon svg { width: 18px; height: 18px; }
+
+  .contact-label {
+    font-family: var(--font-title);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .contact-value {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  .hours-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .hours-table td {
+    padding: 0.45rem 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hours-table td:last-child {
+    text-align: right;
+    color: var(--accent);
+    font-family: var(--font-title);
+    font-weight: 600;
+  }
+
+  .hours-table td:first-child { color: var(--text-muted); }
+
+  .social-row {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .social-btn {
+    width: 44px; height: 44px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+  }
+
+  .social-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--accent);
+    box-shadow: 0 0 14px rgba(57,255,20,0.3);
+  }
+
+  .social-btn svg { width: 20px; height: 20px; fill: var(--text); transition: fill 0.2s; }
+  .social-btn:hover svg { fill: var(--accent); }
+
+  /* Contact form */
+  .contact-form-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+  }
+
+  .form-group { margin-bottom: 1.3rem; }
+
+  .form-label {
+    display: block;
+    font-family: var(--font-title);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .form-input, .form-textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    padding: 0.85rem 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: none;
+  }
+
+  .form-input:focus, .form-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(57,255,20,0.15);
+  }
+
+  .form-textarea { height: 120px; }
+
+  .form-success {
+    display: none;
+    font-family: var(--font-pixel);
+    font-size: 0.55rem;
+    color: var(--accent);
+    line-height: 2;
+    padding: 1rem;
+    border: 1px solid rgba(57,255,20,0.3);
+    background: rgba(57,255,20,0.05);
+    margin-top: 1rem;
+  }
+
+  .btn-submit {
+    width: 100%;
+    font-family: var(--font-title);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 1rem;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .btn-submit:hover {
+    box-shadow: 0 0 24px rgba(57,255,20,0.5);
+    transform: translateY(-1px);
+  }
+
+  /* ============================================
+     MODAL
+     ============================================ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .modal-close:hover { color: var(--accent); border-color: var(--accent); }
+
+  .modal-title {
+    font-family: var(--font-pixel);
+    font-size: 0.6rem;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    line-height: 1.8;
+    padding-right: 2rem;
+  }
+
+  .modal-event-name {
+    font-family: var(--font-title);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 1.8rem;
+  }
+
+  /* ============================================
+     FOOTER
+     ============================================ */
+  footer {
+    background: #050507;
+    border-top: 1px solid var(--border);
+    padding: 3rem 2.5rem;
+    text-align: center;
+  }
+
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .footer-logo svg { width: 32px; height: 32px; }
+
+  .footer-brand {
+    font-family: var(--font-pixel);
+    font-size: 0.55rem;
+    color: var(--text);
+    letter-spacing: 0.1em;
+  }
+
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    list-style: none;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-links a {
+    font-family: var(--font-title);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--accent); }
+
+  .footer-copy {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .footer-age {
+    font-family: var(--font-pixel);
+    font-size: 0.45rem;
+    color: var(--accent-red);
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+  }
+
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
+  @media (max-width: 768px) {
+    section { padding: 5rem 1.2rem; }
+
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+
+    .hero-content { margin-left: 0; }
+
+    .hero-title { font-size: clamp(1.5rem, 10vw, 2.8rem); }
+
+    .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+
+    .events-grid { grid-template-columns: 1fr; }
+
+    .contact-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+
+    #navbar { padding: 0 1.2rem; }
+
+    .about-stats { gap: 1.5rem; }
+
+    .hero-btns { flex-direction: column; }
+    .btn-primary, .btn-outline { text-align: center; justify-content: center; }
+  }
+
+  @media (max-width: 1024px) {
+    .events-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 580px) {
+    .events-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================
+     WEBHOOKI N8N — WSTAW SWOJE ADRESY PONIŻEJ
+     ================================================ -->
+<script>
+  // WEBHOOK dla formularza zapisu na event
+  // Wklej URL webhooka z n8n tutaj:
+  const WEBHOOK_URL = "WSTAW_URL_WEBHOOKA_N8N_TUTAJ";
+
+  // WEBHOOK dla formularza kontaktowego
+  // Wklej URL webhooka z n8n tutaj:
+  const CONTACT_WEBHOOK_URL = "WSTAW_URL_WEBHOOKA_N8N_TUTAJ";
+</script>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">
+    <!-- Logo: geometryczny królik inspirowany oryginałem -->
+    <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="38" height="38" fill="#0a0a0a"/>
+      <!-- uszy -->
+      <rect x="9" y="2" width="6" height="12" fill="white"/>
+      <rect x="23" y="2" width="6" height="12" fill="white"/>
+      <!-- głowa -->
+      <rect x="7" y="10" width="24" height="14" fill="white"/>
+      <!-- oczy / czerwony pasek -->
+      <rect x="7" y="17" width="24" height="4" fill="#cc1c1c"/>
+      <!-- tułów -->
+      <rect x="11" y="24" width="16" height="8" fill="white"/>
+      <!-- nogi -->
+      <rect x="9" y="30" width="7" height="6" fill="white"/>
+      <rect x="22" y="30" width="7" height="6" fill="white"/>
+    </svg>
+    <span class="nav-brand">CYBER<br>MACHINA</span>
+  </a>
+
+  <ul class="nav-links">
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#about">O nas</a></li>
+    <li><a href="#events">Wydarzenia</a></li>
+    <li><a href="#contact">Kontakt</a></li>
+  </ul>
+
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#menu" onclick="closeMobile()">Menu</a>
+  <a href="#about" onclick="closeMobile()">O nas</a>
+  <a href="#events" onclick="closeMobile()">Wydarzenia</a>
+  <a href="#contact" onclick="closeMobile()">Kontakt</a>
+</div>
+
+<!-- ================================================
+     HERO
+     ================================================ -->
+<section id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow-red"></div>
+  <div class="hero-content">
+    <p class="hero-location">// RZESZÓW //</p>
+    <h1 class="hero-title" id="heroTitle"><span class="cursor"></span></h1>
+    <p class="hero-sub">Bar dla graczy — wejdź do gry</p>
+    <div class="hero-btns">
+      <a href="#menu" class="btn-primary">Sprawdź Menu</a>
+      <a href="#events" class="btn-outline">Nadchodzące Eventy</a>
+    </div>
+  </div>
+  <div class="hero-scroll">SCROLL DOWN ↓</div>
+</section>
+
+<!-- ================================================
+     MENU
+     ================================================ -->
+<section id="menu">
+  <div class="section-header reveal">
+    <h2 class="section-title">// MENU //</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="menu-tabs reveal">
+    <button class="tab-btn active" data-tab="drinki">Drinki</button>
+    <button class="tab-btn" data-tab="napoje">Napoje</button>
+    <button class="tab-btn" data-tab="jedzenie">Jedzenie</button>
+    <button class="tab-btn" data-tab="przekaski">Przekąski</button>
+  </div>
+
+  <!-- DRINKI -->
+  <div class="tab-content active" id="tab-drinki">
+    <div class="menu-grid">
+      <div class="menu-card reveal"><div class="menu-card-name">Cyber Glitch</div><div class="menu-card-desc">Wódka, blue curaçao, sprite, limonka</div><div class="menu-card-price">22 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Pixel Punch</div><div class="menu-card-desc">Rum, mango, grenadyna, lód</div><div class="menu-card-price">24 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Game Over</div><div class="menu-card-desc">Jack Daniel's, cola, cytryna</div><div class="menu-card-price">20 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Neon Drift</div><div class="menu-card-desc">Gin, tonic, ogórek, rozmaryn</div><div class="menu-card-price">23 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Boss Fight</div><div class="menu-card-desc">Tequila, triple sec, limonka, sól</div><div class="menu-card-price">25 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Respawn</div><div class="menu-card-desc">Wódka, malina, soda, mięta</div><div class="menu-card-price">21 zł</div></div>
+    </div>
+  </div>
+
+  <!-- NAPOJE -->
+  <div class="tab-content" id="tab-napoje">
+    <div class="menu-grid">
+      <div class="menu-card reveal"><div class="menu-card-name">Cola / Sprite / Fanta</div><div class="menu-card-desc">Klasyczne napoje gazowane</div><div class="menu-card-price">8 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Sok</div><div class="menu-card-desc">Pomarańczowy lub jabłkowy</div><div class="menu-card-price">9 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Woda mineralna</div><div class="menu-card-desc">Gazowana lub niegazowana</div><div class="menu-card-price">6 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Red Bull</div><div class="menu-card-desc">Klasyczny napój energetyczny</div><div class="menu-card-price">12 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Kawa espresso</div><div class="menu-card-desc">Mocna, aromatyczna</div><div class="menu-card-price">10 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Kawa z mlekiem</div><div class="menu-card-desc">Latte, cappuccino</div><div class="menu-card-price">12 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Piwo lane 0,5l</div><div class="menu-card-desc">Świeże piwo z kranu</div><div class="menu-card-price">14 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Piwo lane 0,3l</div><div class="menu-card-desc">Świeże piwo z kranu</div><div class="menu-card-price">10 zł</div></div>
+    </div>
+  </div>
+
+  <!-- JEDZENIE -->
+  <div class="tab-content" id="tab-jedzenie">
+    <div class="menu-grid">
+      <div class="menu-card reveal"><div class="menu-card-name">Burger Cybermachina</div><div class="menu-card-desc">Wołowina, cheddar, karmelizowana cebula, sos własny</div><div class="menu-card-price">32 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Hot Dog Arcade</div><div class="menu-card-desc">Parówka premium, chrzan, musztarda, prażona cebulka</div><div class="menu-card-price">18 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Quesadilla z kurczakiem</div><div class="menu-card-desc">Ser, papryka, guacamole</div><div class="menu-card-price">26 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Nachos z dipami</div><div class="menu-card-desc">Salsa, guacamole, ser</div><div class="menu-card-price">22 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Zestaw desek</div><div class="menu-card-desc">Wędliny, sery, oliwki, pieczywo</div><div class="menu-card-price">38 zł</div></div>
+    </div>
+  </div>
+
+  <!-- PRZEKĄSKI -->
+  <div class="tab-content" id="tab-przekaski">
+    <div class="menu-grid">
+      <div class="menu-card reveal"><div class="menu-card-name">Frytki klasyczne</div><div class="menu-card-desc">Złociste, chrupiące</div><div class="menu-card-price">12 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Frytki z serem i boczkiem</div><div class="menu-card-desc">Topiony ser, chrupiący boczek</div><div class="menu-card-price">18 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Skrzydełka buffalo</div><div class="menu-card-desc">6 szt., ostre, z sosem</div><div class="menu-card-price">22 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Onion rings</div><div class="menu-card-desc">Cebula w chrupiącej panierce</div><div class="menu-card-price">14 zł</div></div>
+      <div class="menu-card reveal"><div class="menu-card-name">Mix snacków do gry</div><div class="menu-card-desc">Orzeszki, chipsy, paluszki</div><div class="menu-card-price">16 zł</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     O NAS
+     ================================================ -->
+<section id="about">
+  <div class="section-header reveal">
+    <h2 class="section-title">// O NAS //</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="about-grid">
+    <div class="reveal">
+      <p class="about-subtitle">Twoje kolejne życie zaczyna się tutaj.</p>
+      <p class="about-text">Cybermachina to nie jest zwykły pub. To miejsce, gdzie pasja do gier spotyka się z dobrym drinkiem i jeszcze lepszym towarzystwem. Znajdziesz tu klimatyczne wnętrze z ceglanym sklepieniem, stanowiska do gier konsolowych, planszówki na każdy wieczór i ekipy, które rozumieją o co chodzi.</p>
+      <p class="about-text">Działamy od 2018 roku w samym sercu Rzeszowa. Zaczynaliśmy jako mały eksperyment — bar, gdzie można było przyjść z joystickiem i piwem. Dziś jesteśmy miejscem spotkań całej rzeszowskiej społeczności graczy. Organizujemy turnieje, game nights, wieczory z planszówkami i imprezy tematyczne.</p>
+      <p class="about-text">Nie musisz być pro-graczem żeby tu pasować. Musisz tylko lubić dobrą atmosferę.</p>
+      <div class="about-stats">
+        <div class="stat">
+          <span class="stat-number">5+</span>
+          <span class="stat-label">Lat na rynku</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">1000+</span>
+          <span class="stat-label">Graczy miesięcznie</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">50+</span>
+          <span class="stat-label">Planszówek</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-quote-card reveal">
+      <p class="about-quote">PRZED<br>WYRUSZENIEM<br>W DROGĘ<br>NALEŻY<br>ZEBRAĆ<br>DRUŻYNĘ</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     WYDARZENIA
+     ================================================ -->
+<section id="events">
+  <div class="section-header reveal">
+    <h2 class="section-title">// WYDARZENIA //</h2>
+    <div class="section-line"></div>
+  </div>
+  <p class="events-subtitle reveal">Sprawdź co u nas gra w najbliższym czasie.</p>
+
+  <div class="events-grid">
+
+    <!-- Event 1 -->
+    <div class="event-card reveal">
+      <div class="event-img">
+        <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="16" width="44" height="26" rx="4" fill="#39ff14" opacity="0.15"/>
+          <rect x="4" y="16" width="44" height="26" rx="4" stroke="#39ff14" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="13" cy="29" r="4" stroke="#39ff14" stroke-width="1.5" opacity="0.6"/>
+          <rect x="22" y="25" width="4" height="8" rx="1" fill="#39ff14" opacity="0.5"/>
+          <rect x="19" y="28" width="10" height="2" rx="1" fill="#39ff14" opacity="0.5"/>
+          <rect x="30" y="24" width="14" height="3" rx="1" fill="#39ff14" opacity="0.4"/>
+          <rect x="30" y="30" width="10" height="3" rx="1" fill="#39ff14" opacity="0.4"/>
+          <circle cx="18" cy="10" r="3" fill="#39ff14" opacity="0.3"/>
+          <circle cx="34" cy="10" r="3" fill="#39ff14" opacity="0.3"/>
+          <rect x="20" y="7" width="12" height="3" rx="1" fill="#39ff14" opacity="0.2"/>
+        </svg>
+      </div>
+      <div class="event-body">
+        <div class="event-date">15.04.2025</div>
+        <div class="event-name">Turniej FIFA 25</div>
+        <div class="event-desc">Rywalizuj z najlepszymi graczami Rzeszowa. Pula nagród: 500 zł. Zapisy do dnia 13 kwietnia. Wejście wolne dla wszystkich uczestników.</div>
+        <div class="event-btns">
+          <button class="btn-sm-outline" onclick="openReadMore('Turniej FIFA 25','15.04.2025','Rywalizuj z najlepszymi graczami Rzeszowa. Pula nagród: 500 zł. Zapisy do dnia 13 kwietnia. Wejście wolne dla wszystkich uczestników. Turniej rozgrywany w trybie 1v1. Rejestracja na miejscu lub online.')">Czytaj więcej</button>
+          <button class="btn-sm-green" onclick="openModal('Turniej FIFA 25')">Chcę się zapisać</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event 2 -->
+    <div class="event-card reveal">
+      <div class="event-img">
+        <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="26" cy="28" r="12" stroke="#39ff14" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="26" cy="28" r="4" fill="#39ff14" opacity="0.2"/>
+          <rect x="22" y="8" width="8" height="12" rx="2" fill="#39ff14" opacity="0.3"/>
+          <rect x="8" y="20" width="10" height="6" rx="2" fill="#39ff14" opacity="0.25"/>
+          <rect x="34" y="20" width="10" height="6" rx="2" fill="#39ff14" opacity="0.25"/>
+          <circle cx="26" cy="28" r="18" stroke="#39ff14" stroke-width="0.8" stroke-dasharray="4 4" opacity="0.2"/>
+        </svg>
+      </div>
+      <div class="event-body">
+        <div class="event-date">22.04.2025</div>
+        <div class="event-name">Mario Kart Night</div>
+        <div class="event-desc">Wieczór z kultową serią Nintendo. Turniej drużynowy, kategorie dla początkujących i zaawansowanych. Drinki w promocji przez cały wieczór.</div>
+        <div class="event-btns">
+          <button class="btn-sm-outline" onclick="openReadMore('Mario Kart Night','22.04.2025','Wieczór z kultową serią Nintendo. Turniej drużynowy 2v2 i 1v1. Kategorie dla początkujących i zaawansowanych. Drinki w promocji -20% przez cały wieczór. Nagrody dla zwycięzców każdej kategorii.')">Czytaj więcej</button>
+          <button class="btn-sm-green" onclick="openModal('Mario Kart Night')">Chcę się zapisać</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event 3 -->
+    <div class="event-card reveal">
+      <div class="event-img">
+        <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="10" width="36" height="28" rx="2" stroke="#39ff14" stroke-width="1.5" opacity="0.4"/>
+          <rect x="12" y="14" width="12" height="8" rx="1" fill="#39ff14" opacity="0.2"/>
+          <rect x="28" y="14" width="12" height="8" rx="1" fill="#39ff14" opacity="0.2"/>
+          <rect x="12" y="26" width="28" height="3" rx="1" fill="#39ff14" opacity="0.15"/>
+          <rect x="12" y="32" width="20" height="3" rx="1" fill="#39ff14" opacity="0.1"/>
+          <rect x="18" y="38" width="16" height="4" rx="1" fill="#39ff14" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="event-body">
+        <div class="event-date">29.04.2025</div>
+        <div class="event-name">Game Night — Planszówki</div>
+        <div class="event-desc">Comiesięczny wieczór z planszówkami. Przynieś swoją ulubioną grę albo wybierz z naszej biblioteki ponad 50 tytułów. Wstęp wolny.</div>
+        <div class="event-btns">
+          <button class="btn-sm-outline" onclick="openReadMore('Game Night — Planszówki','29.04.2025','Comiesięczny wieczór z planszówkami. Przynieś swoją ulubioną grę albo wybierz z naszej biblioteki ponad 50 tytułów. Wstęp wolny dla wszystkich. Impreza rodzinna — mile widziani gracze w każdym wieku. Start od 18:00.')">Czytaj więcej</button>
+          <button class="btn-sm-green" onclick="openModal('Game Night — Planszówki')">Chcę się zapisać</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================================================
+     KONTAKT
+     ================================================ -->
+<section id="contact">
+  <div class="section-header reveal">
+    <h2 class="section-title">// KONTAKT //</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="contact-grid">
+
+    <!-- Lewa kolumna -->
+    <div class="contact-info-block reveal">
+
+      <div class="contact-item">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="contact-label">Adres</div>
+          <div class="contact-value">ul. Kościuszki 2, 35-030 Rzeszów</div>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.81 19.79 19.79 0 01.0 2.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.06 6.06l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="contact-label">Telefon</div>
+          <div class="contact-value">+48 123 456 789</div>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#39ff14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="contact-label">Email</div>
+          <div class="contact-value">kontakt@cybermachina.pl</div>
+        </div>
+      </div>
+
+      <!-- Godziny -->
+      <div>
+        <div class="contact-label" style="margin-bottom:0.8rem">Godziny otwarcia</div>
+        <table class="hours-table">
+          <tr><td>Poniedziałek – Czwartek</td><td>16:00 – 23:00</td></tr>
+          <tr><td>Piątek</td><td>16:00 – 02:00</td></tr>
+          <tr><td>Sobota</td><td>14:00 – 02:00</td></tr>
+          <tr><td>Niedziela</td><td>14:00 – 22:00</td></tr>
+        </table>
+      </div>
+
+      <!-- Social media -->
+      <div>
+        <div class="contact-label" style="margin-bottom:0.8rem">Social media</div>
+        <div class="social-row">
+          <!-- Facebook -->
+          <a href="#" class="social-btn" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+            </svg>
+          </a>
+          <!-- Instagram -->
+          <a href="#" class="social-btn" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" fill="#0a0a0a"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </a>
+          <!-- TikTok -->
+          <a href="#" class="social-btn" aria-label="TikTok">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.78a4.85 4.85 0 01-1.01-.09z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prawa kolumna — formularz -->
+    <div class="contact-form-card reveal">
+      <div class="form-group">
+        <label class="form-label" for="cName">Imię</label>
+        <input class="form-input" type="text" id="cName" placeholder="Twoje imię">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="cEmail">Email</label>
+        <input class="form-input" type="email" id="cEmail" placeholder="twoj@email.pl">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="cSubject">Temat</label>
+        <input class="form-input" type="text" id="cSubject" placeholder="Temat wiadomości">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="cMessage">Wiadomość</label>
+        <textarea class="form-textarea" id="cMessage" placeholder="Napisz do nas..."></textarea>
+      </div>
+      <button class="btn-submit" onclick="sendContact()">Wyślij</button>
+      <div class="form-success" id="contactSuccess">> WIADOMOŚĆ WYSŁANA. ODPOWIEMY W CIĄGU 24H.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================
+     FOOTER
+     ================================================ -->
+<footer>
+  <div class="footer-logo">
+    <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="9" y="2" width="6" height="12" fill="white"/>
+      <rect x="23" y="2" width="6" height="12" fill="white"/>
+      <rect x="7" y="10" width="24" height="14" fill="white"/>
+      <rect x="7" y="17" width="24" height="4" fill="#cc1c1c"/>
+      <rect x="11" y="24" width="16" height="8" fill="white"/>
+      <rect x="9" y="30" width="7" height="6" fill="white"/>
+      <rect x="22" y="30" width="7" height="6" fill="white"/>
+    </svg>
+    <span class="footer-brand">CYBERMACHINA</span>
+  </div>
+  <ul class="footer-links">
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#about">O nas</a></li>
+    <li><a href="#events">Wydarzenia</a></li>
+    <li><a href="#contact">Kontakt</a></li>
+  </ul>
+  <p class="footer-copy">© 2025 Cybermachina Pub Rzeszów. Wszelkie prawa zastrzeżone.</p>
+  <p class="footer-age">Wejście tylko dla osób 18+</p>
+</footer>
+
+<!-- ================================================
+     MODAL — ZAPIS NA EVENT
+     ================================================ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">// ZAPISZ SIĘ NA EVENT //</div>
+    <div class="modal-event-name" id="modalEventName"></div>
+
+    <div class="form-group">
+      <label class="form-label">Imię i nazwisko</label>
+      <input class="form-input" type="text" id="mName" placeholder="Jan Kowalski">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="mEmail" placeholder="twoj@email.pl">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Numer telefonu</label>
+      <input class="form-input" type="tel" id="mPhone" placeholder="+48 000 000 000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nazwa eventu</label>
+      <input class="form-input" type="text" id="mEvent" readonly style="opacity:0.6;cursor:not-allowed">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dodatkowe informacje</label>
+      <textarea class="form-textarea" id="mInfo" placeholder="Coś co powinniśmy wiedzieć..."></textarea>
+    </div>
+    <button class="btn-submit" onclick="sendRegistration()">Zapisz mnie</button>
+    <div class="form-success" id="modalSuccess">> ZGŁOSZENIE PRZYJĘTE! DO ZOBACZENIA NA EVENCIE.</div>
+  </div>
+</div>
+
+<!-- ================================================
+     MODAL — CZYTAJ WIĘCEJ
+     ================================================ -->
+<div class="modal-overlay" id="readMoreOverlay" onclick="closeReadMoreOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeReadMore()">✕</button>
+    <div class="modal-title">// SZCZEGÓŁY EVENTU //</div>
+    <div class="modal-event-name" id="rmEventName"></div>
+    <div style="font-family:var(--font-title);font-size:0.75rem;font-weight:600;letter-spacing:0.1em;color:var(--accent);margin-bottom:1rem;" id="rmEventDate"></div>
+    <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.75;" id="rmEventDesc"></p>
+    <div style="margin-top:1.5rem">
+      <button class="btn-submit" onclick="closeReadMore();setTimeout(()=>openModal(document.getElementById('rmEventName').textContent),200)">Chcę się zapisać</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================
+     JAVASCRIPT
+     ================================================ -->
+<script>
+  // --- NAVBAR SCROLL ---
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // --- HAMBURGER ---
+  const ham = document.getElementById('hamburger');
+  const mob = document.getElementById('mobileMenu');
+  ham.addEventListener('click', () => {
+    ham.classList.toggle('open');
+    mob.classList.toggle('open');
+  });
+  function closeMobile() {
+    ham.classList.remove('open');
+    mob.classList.remove('open');
+  }
+
+  // --- ACTIVE NAV ---
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-links a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(s => observer.observe(s));
+
+  // --- SCROLL REVEAL ---
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  // --- TYPEWRITER HERO ---
+  const heroTitle = document.getElementById('heroTitle');
+  const fullText = 'CYBER\nMACHINA';
+  let i = 0;
+  function typeWriter() {
+    if (i < fullText.length) {
+      const char = fullText[i];
+      const cursor = heroTitle.querySelector('.cursor');
+      if (char === '\n') {
+        cursor.before(document.createElement('br'));
+      } else {
+        const span = document.createElement('span');
+        span.textContent = char;
+        span.style.opacity = '0';
+        span.style.animation = `fadeIn 0.1s forwards`;
+        cursor.before(span);
+      }
+      i++;
+      setTimeout(typeWriter, char === '\n' ? 200 : 80);
+    }
+  }
+  setTimeout(typeWriter, 600);
+
+  // --- MENU TABS ---
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = document.getElementById('tab-' + btn.dataset.tab);
+      tab.classList.add('active');
+      // Re-trigger reveal on newly visible cards
+      tab.querySelectorAll('.reveal').forEach(el => {
+        if (!el.classList.contains('visible')) revealObserver.observe(el);
+      });
+    });
+  });
+
+  // --- MODAL ZAPIS ---
+  function openModal(eventName) {
+    document.getElementById('modalEventName').textContent = eventName;
+    document.getElementById('mEvent').value = eventName;
+    document.getElementById('modalSuccess').style.display = 'none';
+    document.getElementById('mName').value = '';
+    document.getElementById('mEmail').value = '';
+    document.getElementById('mPhone').value = '';
+    document.getElementById('mInfo').value = '';
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  async function sendRegistration() {
+    const data = {
+      imie_nazwisko: document.getElementById('mName').value,
+      email: document.getElementById('mEmail').value,
+      telefon: document.getElementById('mPhone').value,
+      event: document.getElementById('mEvent').value,
+      info: document.getElementById('mInfo').value,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        mode: 'no-cors'
+      });
+    } catch(e) { /* no-cors może rzucić błąd — ignorujemy */ }
+
+    document.getElementById('modalSuccess').style.display = 'block';
+    setTimeout(closeModal, 2800);
+  }
+
+  // --- MODAL CZYTAJ WIĘCEJ ---
+  function openReadMore(name, date, desc) {
+    document.getElementById('rmEventName').textContent = name;
+    document.getElementById('rmEventDate').textContent = date;
+    document.getElementById('rmEventDesc').textContent = desc;
+    document.getElementById('readMoreOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeReadMore() {
+    document.getElementById('readMoreOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeReadMoreOutside(e) {
+    if (e.target === document.getElementById('readMoreOverlay')) closeReadMore();
+  }
+
+  // --- FORMULARZ KONTAKTOWY ---
+  async function sendContact() {
+    const data = {
+      imie: document.getElementById('cName').value,
+      email: document.getElementById('cEmail').value,
+      temat: document.getElementById('cSubject').value,
+      wiadomosc: document.getElementById('cMessage').value,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      await fetch(CONTACT_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        mode: 'no-cors'
+      });
+    } catch(e) { /* ignorujemy */ }
+
+    document.getElementById('contactSuccess').style.display = 'block';
+    document.getElementById('cName').value = '';
+    document.getElementById('cEmail').value = '';
+    document.getElementById('cSubject').value = '';
+    document.getElementById('cMessage').value = '';
+  }
+</script>
+</body>
+</html>
